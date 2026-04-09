@@ -101,10 +101,10 @@ This parses all course TXT files, generates chunks and embeddings, builds Chroma
 ### 4. Launch
 
 ```bash
-uvicorn app:app --reload --port 7860
+uvicorn app:app --reload --port 8080
 ```
 
-Open <http://localhost:7860> in your browser.
+Open <http://localhost:8080> in your browser.
 
 ### 5. Run Evaluation (Optional)
 
