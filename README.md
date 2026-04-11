@@ -122,36 +122,73 @@ python evaluation.py --mode ablation    # Ablation study only
 
 ### Retrieval Metrics
 
-| Metric                   | Description                                                             |
-| :----------------------- | :---------------------------------------------------------------------- |
-| **Hit Rate\@5**          | Proportion of queries where at least 1 relevant result appears in top-5 |
-| **Precision\@5**         | Fraction of top-5 results matching the target course                    |
-| **Section Precision\@5** | Stricter: matches both course code and section type                     |
-| **NDCG\@5**              | Normalized Discounted Cumulative Gain — measures ranking quality        |
-| **Recall\@5**            | Proportion of relevant courses retrieved                                |
-| **MRR**                  | Mean Reciprocal Rank of the first relevant result                       |
+| Metric | Description |
+|--------|-------------|
+| **Hit Rate** | Proportion of queries where at least 1 relevant result appears in top-k |
+| **Recall** | Proportion of relevant courses retrieved (critical for multi-course queries) |
+| **MRR** | Mean Reciprocal Rank of the first relevant result |
+| **Course Coverage** | B-class only: actual relevant courses found / total expected (e.g., 33/53) |
+
+> **Dynamic top-k**: Simple/Reasoning/Boundary queries use k=5; Multi-course queries use k=15 to maximize course coverage.
+
+### Generation Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **Completeness** | LLM-judged score (1-5) measuring how fully the answer addresses the question |
+| **Keyword Hit Rate** | Hard metric: percentage of expected keywords present in the answer (deterministic, reproducible) |
+| **Faithfulness** | Whether the answer is correct against ground truth (expected keywords), NOT against retrieved docs |
+| **Groundedness** | Whether the answer only contains facts from retrieved documents (hallucination detection) |
+
+> **Faithfulness vs Groundedness**: Faithfulness checks "did you answer correctly?" while Groundedness checks "did you make anything up?". A system can be grounded (no hallucination) but unfaithful (answered wrong course's info because retrieval failed).
 
 ### Test Suite Design
 
 24 test cases across 4 categories:
 
-| Category             | Count | Purpose                                               |
-| :------------------- | :---- | :---------------------------------------------------- |
-| Simple Lookup        | 6     | Single course, single section — baseline accuracy     |
-| Multi-Course / Broad | 8     | Cross-course queries — tests summary routing          |
-| Advanced Reasoning   | 6     | Cross-section, implicit info — tests query expansion  |
-| Anti-Hallucination   | 4     | Non-existent info, edge cases — tests refusal ability |
+| Category | Count | Purpose |
+|----------|-------|---------|
+| A: Simple Lookup | 6 | Single course, single section — baseline accuracy |
+| B: Multi-Course / Broad | 8 | Cross-course queries including colloquial phrasing — tests summary routing & course coverage |
+| C: Advanced Reasoning | 6 | Cross-section, multi-condition queries — tests query expansion & decomposition |
+| D: Anti-Hallucination | 4 | Non-existent info, edge cases — tests refusal ability & boundary reasoning |
 
 ### Ablation Study
 
-Evaluates the contribution of each pipeline component using a filtered subset of challenging queries:
+Compares Naive RAG (direct vector search, no enhancement) vs Full Pipeline across all metrics:
 
-| Config          | Components                                     |
-| :-------------- | :--------------------------------------------- |
-| Vector only     | ChromaDB dense retrieval                       |
-| + BM25 (RRF)    | + Sparse retrieval with Reciprocal Rank Fusion |
-| + Summary Index | + Course-level summary routing                 |
-| Full pipeline   | + Multi-Query Expansion (async parallel)       |
+| Config | Components |
+|--------|------------|
+| **Naive RAG** | ChromaDB dense retrieval only — raw question as query, no intent classification, no filtering |
+| **Full Pipeline** | Intent classification → Summary index routing → Metadata filtering → Multi-query expansion → Async parallel retrieval → Parent context backfill |
+
+Both retrieval and generation metrics are reported per-category to reveal where each pipeline component contributes most.
+
+### Key Findings
+
+- **A (Simple Lookup)**: Full Pipeline significantly outperforms Naive due to metadata filtering by course code and section type
+- **B (Multi-Course)**: Both systems face inherent top-k coverage limits; Full Pipeline achieves higher recall through summary-level routing
+- **C (Cross-Section Reasoning)**: Largest performance gap — query decomposition and multi-section retrieval show clear value
+- **D (Anti-Hallucination)**: Full Pipeline achieves perfect retrieval; accurate course targeting enables correct refusal
+
+### Future Work
+
+The following enhancements are planned but not yet implemented:
+
+**Additional Retrieval Metrics**:
+- **Precision@5**: Fraction of top-5 results matching the target course
+- **Section Precision@5**: Stricter variant — matches both course code and section type
+- **NDCG@5**: Normalized Discounted Cumulative Gain — measures ranking quality with graded relevance
+
+**Component-Level Ablation**:
+Incrementally adding each pipeline component to isolate individual contributions:
+
+| Config | Components |
+|--------|------------|
+| Vector only | ChromaDB dense retrieval |
+| + BM25 (RRF) | + Sparse retrieval with Reciprocal Rank Fusion |
+| + Summary Index | + Course-level summary routing |
+| Full Pipeline | + Multi-Query Expansion (async parallel) |
 
 ## 🛠️ Tech Stack
 
