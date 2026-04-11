@@ -17,8 +17,10 @@ MAX_SECTION_TOKENS = 800
 CHILD_CHUNK_SIZE = 500
 CHILD_CHUNK_OVERLAP = 100
 TOP_K = 5
-TOP_K_BROAD = 10                     # 广泛问题返回更多结果
-SUMMARY_TOP_K = 5                    # 摘要层返回的课程数量
+# TOP_K_BROAD = 10                     # 广泛问题返回更多结果
+# SUMMARY_TOP_K = 5                    # 摘要层返回的课程数量
+TOP_K_BROAD = 15          # 从 10 调到 15
+SUMMARY_TOP_K = 10        # 从 5 调到 10
 
 # DashScope OpenAI 兼容端点
 DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
