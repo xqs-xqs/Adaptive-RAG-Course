@@ -133,14 +133,14 @@ python evaluation.py --mode ablation    # Ablation study only
 
 ### Test Suite Design
 
-20 test cases across 4 categories:
+24 test cases across 4 categories:
 
 | Category             | Count | Purpose                                               |
 | :------------------- | :---- | :---------------------------------------------------- |
 | Simple Lookup        | 6     | Single course, single section — baseline accuracy     |
 | Multi-Course / Broad | 8     | Cross-course queries — tests summary routing          |
 | Advanced Reasoning   | 6     | Cross-section, implicit info — tests query expansion  |
-| Anti-Hallucination   | 3     | Non-existent info, edge cases — tests refusal ability |
+| Anti-Hallucination   | 4     | Non-existent info, edge cases — tests refusal ability |
 
 ### Ablation Study
 
