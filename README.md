@@ -1,14 +1,46 @@
-# 📚 Course RAG — PolyU 选课智能问答系统
+# 📚 Course RAG — Adaptive RAG Chatbot for University Course Selection
 
-An Adaptive-RAG system for course selection at The Hong Kong Polytechnic University, featuring intent-aware retrieval, hybrid search, and a conversational web interface.
+<div align="center">
+
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688)](https://fastapi.tiangolo.com/)
+[![LangChain](https://img.shields.io/badge/LangChain-0.2%2B-1C3C3C)](https://www.langchain.com/)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-vector%20store-FF6B6B)](https://www.trychroma.com/)
+[![Qwen](https://img.shields.io/badge/LLM-Qwen%20(DashScope)-FFA500)](https://dashscope.aliyun.com/)
+[![License](https://img.shields.io/badge/license-Academic-green)](#license)
+
+
+
+**An Adaptive-RAG system for course selection at PolyU, featuring intent-aware retrieval, hybrid search, conversational web interface, and a comprehensive benchmark.**
+
+English | [中文](README_CN.md) 
+
+> **Production-style Adaptive Retrieval-Augmented Generation (RAG) system** with **hybrid search (BM25 + dense vector)**, **Reciprocal Rank Fusion (RRF)**, **parent-child chunking**, **query decomposition**, **multi-turn conversation**, and a **comprehensive evaluation suite** (Hit Rate, Recall, MRR, Faithfulness, Groundedness). Built end-to-end with **FastAPI**, **LangChain**, **ChromaDB**, **Qwen (DashScope)**, and **jieba** Chinese tokenization. Includes a **bundled Claude skill** that turns this repo into an interactive learning + interview-prep tutor.
+
+</div>
+
+
+
+
+
+---
+
 
 <br />
 
-<img width="1633" height="1475" alt="image" src="https://github.com/user-attachments/assets/74caf991-b7df-4c26-a34a-6ed68434fa07" />
+<img width="1633" height="1475" alt="PolyU Adaptive RAG Course Selection Chatbot — web UI showing hybrid search results, intent classification, and inline citations" src="https://github.com/user-attachments/assets/74caf991-b7df-4c26-a34a-6ed68434fa07" />
 
 
 
 ***
+
+## 🎯 Who is this for?
+
+- **ML / NLP engineers** building production RAG systems and looking for a complete, well-evaluated reference implementation
+- **Students / job seekers** preparing for backend / AI interviews who want a portfolio project with real depth (this repo ships with a [bundled tutor + interview-drill skill](#-learning--interview-prep-skill))
+- **Researchers** experimenting with adaptive routing, hybrid retrieval, and ablation methodology on a small but realistic Chinese-English bilingual corpus
+- **Practitioners** adapting RAG to course catalogs, knowledge-base QA, document advisory bots, or any domain with structured records + free-text fields
 
 ## ✨ Features
 
@@ -20,8 +52,11 @@ An Adaptive-RAG system for course selection at The Hong Kong Polytechnic Univers
 - **Multi-Turn Conversation** — Session-based dialogue with history-aware context
 - **Inline Citations** — LLM-generated `[1]` `[2]` references rendered as interactive green dots with hover tooltips
 - **Comprehensive Evaluation** — Hit Rate, Precision, NDCG, MRR metrics + ablation study across pipeline components
+- **Bundled Mentor Skill** — A Claude skill (`adaptive-rag-mentor/`) that turns this repo into an interactive learning + interview prep companion (Chinese, hybrid explain-then-drill mode). See [Learning & Interview Prep Skill](#-learning--interview-prep-skill).
 
 ## 🏗️ Architecture
+
+The system uses a **two-stage adaptive pipeline**: an LLM-based **intent classifier** routes queries to one of four paths (chitchat / simple_lookup / standard / complex), each with a different retrieval depth. The **standard** and **complex** paths use a **two-layer index** — first a course-level **summary index** narrows candidate courses, then a **chunk-level index** retrieves precise sections — combined via **hybrid search (BM25 + vector)** and fused with **Reciprocal Rank Fusion (RRF)**.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -74,6 +109,10 @@ course-rag/
 ├── static/
 │   └── index.html         # Frontend (inline HTML/CSS/JS)
 ├── course_docs/           # Source course TXT files
+├── adaptive-rag-mentor/   # Bundled Claude skill (interactive tutor + interview drill)
+│   ├── SKILL.md
+│   └── references/        # 14 deep-dive reference files (project walk-through,
+│                          #   tech stack internals, RAG domain, production, gotchas, drills)
 ├── requirements.txt
 └── README.md
 ```
@@ -175,15 +214,19 @@ Both retrieval and generation metrics are reported per-category to reveal where 
 
 ## 🛠️ Tech Stack
 
-| Component     | Technology                                                          |
-| :------------ | :------------------------------------------------------------------ |
-| LLM           | Qwen-Plus (generation), Qwen-Turbo (intent/expansion) via DashScope |
-| Embedding     | text-embedding-v4 (DashScope)                                       |
-| Vector Store  | ChromaDB                                                            |
-| Sparse Search | BM25 (rank-bm25 + jieba tokenization)                               |
-| Framework     | LangChain                                                           |
-| Backend       | FastAPI                                                             |
-| Frontend      | Vanilla HTML/CSS/JS                                                 |
+| Component         | Technology                                                          |
+| :---------------- | :------------------------------------------------------------------ |
+| **LLM**           | Qwen-Plus (generation), Qwen-Turbo (intent / query expansion / decomposition) via DashScope, OpenAI-compatible API |
+| **Embedding**     | DashScope `text-embedding-v4` (1536-dim, multilingual, asymmetric query/document encoding) |
+| **Vector Store**  | ChromaDB (HNSW index, embedded mode, persistent SQLite backend) |
+| **Sparse Search** | BM25 (rank-bm25 + jieba Chinese tokenization, Okapi BM25, IDF + TF saturation) |
+| **Fusion**        | Reciprocal Rank Fusion (RRF, k=60) |
+| **Framework**     | LangChain (Embeddings, Document, RecursiveCharacterTextSplitter, ChatOpenAI) |
+| **Backend**       | FastAPI (ASGI, async/await, Pydantic validation, OpenAPI docs) |
+| **Streaming**     | Server-Sent Events (SSE) for token-level real-time response |
+| **Frontend**      | Vanilla HTML/CSS/JS with inline citation rendering ([1] [2] hover tooltips) |
+| **Tokenizer**     | tiktoken (cl100k_base) for chunk-size budgeting |
+| **Concurrency**   | asyncio + ThreadPoolExecutor for parallel query expansion + decomposition |
 
 ## 📝 Data Format
 
@@ -286,6 +329,132 @@ Current intent classification calls `qwen-turbo` via public API (~1-3s per call)
 - **Training data**: Use the existing LLM intent classifier to label 1000-2000 synthetic queries (generated by LLM from course data), then train the local model on these labels (knowledge distillation)
 - **Expected improvement**: Inference time from ~1-3s (API call) → ~10-50ms (local GPU/CPU), reducing overall query latency by 30-50%
 - **Hybrid fallback**: If local classifier confidence < 0.8, fall back to LLM API call for difficult queries; log low-confidence cases for future training data collection
+
+## 📖 Learning & Interview Prep Skill
+
+This repository ships with an [Anthropic Claude skill](https://docs.claude.com/en/docs/claude-code/skills) — `adaptive-rag-mentor/` — that turns the codebase into an interactive tutor and interview drill partner. It was built specifically for understanding *this* project deeply enough to defend it in technical interviews (especially backend / AI roles at top Chinese tech companies).
+
+The skill is in **Chinese** and operates in two modes that work together:
+
+- **Explain mode (讲解)**: For "what does this do / why is it written this way?" questions. Walks through one-line positioning → design intent → implementation → alternative approaches considered → known pitfalls → likely interviewer angles.
+- **Drill mode (拷问)**: Interview simulation. Asks one question at a time across four difficulty tiers (🟢 basic / 🟡 mid / 🟠 advanced / 🔴 staff-level), grades responses, gives hints when stuck, and follows up with adversarial pressure-test questions in the style of senior tech interviewers.
+
+### What's inside
+
+```
+adaptive-rag-mentor/
+├── SKILL.md                          # Routing + teaching protocol
+└── references/
+    ├── 00_project_map.md             # Project bird's-eye view, file dependencies, request flow
+    ├── 01_config_and_app.md          # config.py + app.py walkthrough
+    ├── 02_parsing_chunking.md        # txt_parser + chunking strategies
+    ├── 03_indexing.md                # Indexing pipeline + embedding wrapper
+    ├── 04_retrieval.md               # Core: intent routing, RRF, hybrid search, async (~40KB)
+    ├── 05_generation.md              # Prompt construction + multi-turn dialogue
+    ├── 06_evaluation.md              # 4 metrics + ablation + Faithfulness vs Groundedness
+    ├── tech_fastapi.md               # FastAPI / ASGI / Pydantic / SSE internals
+    ├── tech_langchain.md             # LangChain abstractions and criticism
+    ├── tech_jieba_bm25.md            # Chinese segmentation + BM25 formula derivation
+    ├── tech_chromadb_embedding.md    # HNSW, vector DB selection, embedding models
+    ├── tech_asyncio.md               # Coroutines, GIL, ThreadPool, run_in_executor
+    ├── rag_domain.md                 # General RAG: chunking strategies, retrieval paradigms,
+    │                                 #   reranking, Agentic RAG, Contextual Retrieval
+    ├── production.md                 # Caching, rate limiting, circuit breaker, observability,
+    │                                 #   A/B testing, security (prompt injection, multi-tenancy)
+    ├── interview_drill.md            # 65 tiered interview questions with answer rubrics
+    └── gotchas.md                    # 16 specific bugs / design issues found in the codebase
+                                      #   with location, impact, fix, and how to address in
+                                      #   an interview
+```
+
+### How to use it
+
+The skill is designed to be loaded by [Claude](https://claude.ai/) (Pro/Team/Enterprise tier with skills enabled, or via the API).
+
+**Option 1 — Upload to Claude.ai**:
+1. Zip the `adaptive-rag-mentor/` folder
+2. Upload it as a custom skill in Claude.ai settings
+3. In a new chat, ask something like *"开始复习我的 adaptive-rag-course 项目"* or *"讲讲 retrieval.py 里的 RRF"* — the skill activates automatically
+
+**Option 2 — Use locally with Claude Code**:
+Place the folder under your skills directory (`~/.claude/skills/` or project-local) and invoke from any conversation about this codebase.
+
+**Option 3 — Reference manually**:
+Even without Claude, the markdown files are readable on their own. Start with `00_project_map.md` for the architecture overview, then dive into `04_retrieval.md` (the most important file) and `gotchas.md` (known issues).
+
+### Sample interactions
+
+```
+You: 讲讲 RRF 是怎么工作的
+Skill (Explain mode):
+  1. 一句话定位：把多路检索结果用排名信息融合,不依赖原始分数
+  2. 设计意图:BM25 和 vector cosine 量纲不同,加权平均要标准化太麻烦...
+  3. 实现拆解:retrieval.py 第 173-185 行,公式 1/(k+rank+1)...
+  4. 对比方案:vs CombSUM / 加权平均 / Cross-Encoder rerank...
+  5. 踩坑预警:第 179 行用 page_content[:100] 当 ID,prefix 重复会冲突
+  6. 面试官视角:可能追问 k=60 怎么定的、能不能用 LLM 替代 RRF...
+  收尾:想试试我从面试官视角拷问你吗?
+
+You: 拷问我
+Skill (Drill mode):
+  🟡 中级第 1 题:为什么用 RRF 不用加权平均?
+  [等用户回答]
+  → 评分 + 点评 + 追问下一层 (adversarial pressure)
+```
+
+### Why a separate skill, not just docs?
+
+Reading docs is passive. The skill enforces **active recall** through drill mode, and adapts depth based on user responses. The reference files double as searchable docs (good for skim-reading) *and* as the skill's authoritative knowledge base (loaded into context only when relevant) — progressive disclosure to keep token usage low while preserving depth.
+
+### Honest disclosure
+
+`gotchas.md` documents 16 issues in the codebase — including things like:
+- A typo in `config.py:8` (`qwen3.6-plus` should be `qwen-plus`)
+- A debugging artifact in `retrieval.py:378` (`max_per = 2 if is_broad else 2`)
+- Architectural issues like in-memory `ConversationManager` and synchronous LLM calls inside async routes
+
+These are kept transparent on purpose: the skill is for learning, and pretending the code is perfect would make the lessons less useful. Most are MVP-level shortcuts that any production deployment would need to address.
+
+## ❓ FAQ
+
+**Q: What is Adaptive RAG and how is it different from Naive RAG?**
+A: Naive RAG runs the same retrieval pipeline regardless of query complexity — single vector search, fixed top-k, no enhancement. Adaptive RAG classifies user intent first (chitchat / simple_lookup / standard / complex), then routes to a path matched to that complexity: simple lookups skip enhancement, while complex queries trigger query decomposition + multi-query expansion + parallel hybrid retrieval. This matches retrieval depth to query difficulty, optimizing both latency and accuracy. See `retrieval.py` for the full routing logic.
+
+**Q: Why hybrid search (BM25 + vector) instead of vector-only?**
+A: Dense vector retrieval (semantic search) captures meaning but struggles with rare proper nouns, course codes (e.g., `COMP5422`), and exact keyword matches. BM25 (sparse retrieval) excels at exact-term matching with strong inverse document frequency weighting. Combining them via Reciprocal Rank Fusion (RRF) yields better Recall and MRR than either alone — confirmed by the ablation study in `evaluation.py`.
+
+**Q: What is Reciprocal Rank Fusion (RRF) and why use it instead of weighted scoring?**
+A: RRF combines multiple ranked lists using `score(d) = Σ 1/(k + rank_i + 1)` where k=60. It uses only ranks (not raw scores), which is robust because BM25 scores (0 to ∞) and vector cosine similarity (-1 to 1) have incompatible scales. Weighted score combination requires ad-hoc normalization; RRF is parameter-light and battle-tested (originally from Cormack et al. 2009, used in Elasticsearch's reciprocal_rank_fusion API).
+
+**Q: How does parent-child chunking work?**
+A: Long sections are split into small **child chunks** (~500 tokens) for retrieval — small chunks have focused embeddings and match queries precisely. The full **parent text** (the whole section) is stored separately and back-filled at generation time, so the LLM sees complete context. This solves the classic "small chunks improve retrieval but break generation, large chunks do the opposite" trade-off.
+
+**Q: What is the difference between Faithfulness and Groundedness?**
+A: **Faithfulness** measures whether the answer correctly conveys the ground-truth facts (judged against `expected_keywords`). **Groundedness** measures whether the answer only uses information present in the retrieved documents (hallucination detection). A system can be `grounded` but `unfaithful` — when retrieval misses the right docs and the LLM faithfully reports the wrong info. Both metrics are needed for full RAG evaluation.
+
+**Q: Can I adapt this to other Chinese course catalogs / domain QA?**
+A: Yes — the architecture is domain-agnostic. To adapt: (1) replace `course_docs/` with your text corpus, (2) update `txt_parser.py` field mappings for your schema, (3) adjust `chunking.py` `SECTION_MAPPING` to your section types, (4) tune intent prompts in `retrieval.py` for your query distribution, (5) re-run `python indexing.py`. The `adaptive-rag-mentor/` skill walks through every customization point.
+
+**Q: Why Qwen / DashScope instead of OpenAI?**
+A: This project targets Chinese-language course content where Qwen has strong native performance. DashScope provides an OpenAI-compatible API (`base_url=https://dashscope.aliyuncs.com/compatible-mode/v1`), so swapping to OpenAI requires only changing `LLM_MODEL` and `base_url` — the LangChain `ChatOpenAI` wrapper works identically.
+
+**Q: Production-ready?**
+A: This is a research/educational implementation with documented limitations (see the bundled mentor skill's `gotchas.md` for 16 specific issues). For production deployment, plan for: async LLM calls, Redis-backed conversation state, ChromaDB server mode (or Milvus/Qdrant for scale), Elasticsearch for BM25, multi-level caching, rate limiting, circuit breakers, and observability. See section "High Concurrency & Production Deployment" in [Future Work](#-future-work).
+
+## 🏷️ Recommended GitHub Topics
+
+To improve discoverability, this repository can be tagged with the following GitHub topics (Settings → Topics):
+
+```
+rag  retrieval-augmented-generation  adaptive-rag  agentic-rag  hybrid-rag  hybrid-retrieval
+hybrid-search  bm25  dense-retrieval  sparse-retrieval  rrf  reciprocal-rank-fusion
+parent-child-chunking  contextual-retrieval  query-decomposition  query-expansion
+intent-classification  chromadb  langchain  fastapi  qwen  dashscope  jieba  chinese-nlp
+llm  llm-chatbot  rag-chatbot  rag-pipeline  rag-evaluation  ablation-study
+faithfulness  groundedness  hallucination-detection  course-recommendation
+question-answering  semantic-search  vector-search  sse-streaming  multi-turn-dialogue
+async-python  python  polyu  hong-kong-polytechnic-university
+```
 
 ## License
 
