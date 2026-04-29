@@ -16,11 +16,11 @@
 
 English | [中文](README_CN.md) 
 
-> **Production-style Adaptive Retrieval-Augmented Generation (RAG) system** with **hybrid search (BM25 + dense vector)**, **Reciprocal Rank Fusion (RRF)**, **parent-child chunking**, **query decomposition**, **multi-turn conversation**, and a **comprehensive evaluation suite** (Hit Rate, Recall, MRR, Faithfulness, Groundedness). Built end-to-end with **FastAPI**, **LangChain**, **ChromaDB**, **Qwen (DashScope)**, and **jieba** Chinese tokenization. Includes a **bundled Claude skill** that turns this repo into an interactive learning + interview-prep tutor.
+
 
 </div>
 
-
+> **Production-style Adaptive Retrieval-Augmented Generation (RAG) system** with **hybrid search (BM25 + dense vector)**, **Reciprocal Rank Fusion (RRF)**, **parent-child chunking**, **query decomposition**, **multi-turn conversation**, and a **comprehensive evaluation suite** (Hit Rate, Recall, MRR, Faithfulness, Groundedness). Built end-to-end with **FastAPI**, **LangChain**, **ChromaDB**, **Qwen (DashScope)**, and **jieba** Chinese tokenization. Includes a **bundled Claude skill** that turns this repo into an interactive learning + interview-prep tutor.
 
 
 
