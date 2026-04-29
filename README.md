@@ -443,7 +443,7 @@ A: This is a research/educational implementation with documented limitations (se
 
 ## 🏷️ Recommended GitHub Topics
 
-To improve discoverability, this repository can be tagged with the following GitHub topics (Settings → Topics):
+
 
 ```
 rag  retrieval-augmented-generation  adaptive-rag  agentic-rag  hybrid-rag  hybrid-retrieval
